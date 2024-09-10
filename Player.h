@@ -1,16 +1,7 @@
 #pragma once
-#include <Audio.h>
-#include <Input.h>
-#include <Model.h>
-#include <Sprite.h>
-#include <TextureManager.h>
-#include <ViewProjection.h>
-#include <WorldTransform.h>
-#include <memory>
-#include <vector>
-#include <Vector3.h>
+#include "BaseCharacter.h"
 
-class Player {
+class Player : public BaseCharacter {
 public: // 関数
 	// 初期化
 	void Initialize(const std::vector<Model*>& models);
@@ -30,6 +21,18 @@ public: // 関数
 		worldTransform_.translation_ = position;
 		worldTransform_.UpdateMatrix();
 	}
+
+	Vector3 GetCenterPosition() const override;
+
+	//衝突を検出したら呼び出されるコールバック関数
+	void OnCollision([[maybe_unused]] Collider* other) override;
+
+	//くっついている団子の数を取得
+	int GetDangoCount() { return dangoCount_; }
+
+	//当たった団子をプレイヤーの子としてペアレントする
+	void SetParentPlayer(const WorldTransform* parent);
+
 private: // 関数
 
 public:  // 変数
@@ -49,4 +52,7 @@ private: // 変数
 	Vector3 velocity_;
 	// モデル
 	std::vector<Model*> models_;
+
+	//くっついている団子の数
+	int dangoCount_ = 0;
 };

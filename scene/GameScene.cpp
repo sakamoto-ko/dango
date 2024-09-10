@@ -6,11 +6,7 @@
 
 GameScene::GameScene() {}
 
-GameScene::~GameScene() {
-	for (Dango* dango : dangos_) {
-		delete dango;
-	}
-}
+GameScene::~GameScene() {}
 
 void GameScene::Initialize() {
 	dxCommon_ = DirectXCommon::GetInstance();
@@ -35,11 +31,15 @@ void GameScene::Initialize() {
 	// プレイヤーの生成と初期化
 	player_ = std::make_unique<Player>();
 	player_->Initialize(playerModels);
+	player_->SetRadius(1.5f);
 
 	// 団子モデル生成
 	dangoModel_.reset(Model::CreateFromOBJ("Dango", true));
-	//団子の生成
+	// 団子の生成
 	CreateDango();
+
+	// 衝突マネージャの生成と初期化
+	collisionManager_ = std::make_unique<CollisionManager>();
 }
 
 void GameScene::Update() {
@@ -54,19 +54,48 @@ void GameScene::Update() {
 		CreateDango();
 		DangoSpawnCount_ = 0;
 	}
-	// 団子の更新
-	for (Dango* dango : dangos_) {
+	for (std::unique_ptr<Dango>& dango : dangos_) {
+		// 団子の更新
 		dango->Update();
+		// 団子がプレイヤーに当たったら
+		if (dango->GetIsHit()) {
+			// プレイヤーの子としてペアレントに登録
+			player_->SetParentPlayer(dango->GetParent());
+			// くっついている団子の数に応じて下に移動
+			dango->SetWorldPosition(Vector3(player_->GetPosition().x, dangoPos[dangoNum], player_->GetPosition().z));
+			dangoNum++;
+			dango->SetIsHit(false);
+			dango->SetIsDead(true);
+		}
+		//プレイヤーにくっついているとき
+		if (dango->GetIsDead()) {
+			dango->SetWorldPosition(Vector3(player_->GetPosition().x, dango->GetPos().y, player_->GetPosition().z));
+		}
 	}
 	// 団子が画面外に出たら団子リストから取り除く
-	dangos_.remove_if([](Dango* dango) {
-		if (dango->GetIsDead()) {
-			delete dango;
+	dangos_.remove_if([](std::unique_ptr<Dango>& dango) {
+		if (dango->GetIsOutOfField()) {
+			dango.release();
 
 			return true;
 		};
 		return false;
 	});
+	// プレイヤーにくっついている団子が3個を超えたら団子リストから取り除く
+	if (dangoNum >= 3) {
+		dangos_.remove_if([](std::unique_ptr<Dango>& dango) {
+			if (dango->GetIsDead()) {
+				dango.release();
+
+				return true;
+			};
+			return false;
+		});
+		dangoNum = 0;
+	}
+
+	// 衝突判定と応答
+	CheckAllCollisions();
 }
 
 void GameScene::Draw() {
@@ -95,7 +124,7 @@ void GameScene::Draw() {
 	player_->Draw(viewProjection_);
 
 	// 団子の3D描画
-	for (Dango* dango : dangos_) {
+	for (std::unique_ptr<Dango>& dango : dangos_) {
 		dango->Draw(viewProjection_);
 	}
 
@@ -111,7 +140,7 @@ void GameScene::Draw() {
 	player_->DrawUI();
 
 	// 団子の2D描画
-	for (Dango* dango : dangos_) {
+	for (std::unique_ptr<Dango>& dango : dangos_) {
 		dango->DrawUI();
 	}
 
@@ -137,9 +166,25 @@ void GameScene::CreateDango() {
 	// 団子テクスチャ生成
 	std::vector<uint32_t> dangoTextures{pinkTex_, whiteTex_, greenTex_, blackTex_};
 
-	//団子の生成と初期化
-	Dango* newDango = new Dango();
+	// 団子の生成と初期化
+	std::unique_ptr<Dango> newDango = std::make_unique<Dango>();
 	newDango->Initialize(dangoModels, dangoTextures);
-	//団子リストの作成
-	dangos_.push_back(newDango);
+	newDango->SetRadius(0.5f);
+	// 団子リストの作成
+	dangos_.push_back(std::move(newDango));
+}
+
+void GameScene::CheckAllCollisions() {
+	// 衝突マネージャのリセット
+	collisionManager_->Reset();
+
+	// コライダーをリストに登録
+	collisionManager_->AddCollider(player_.get());
+	// 団子全てについて
+	for (const std::unique_ptr<Dango>& dango : dangos_) {
+		collisionManager_->AddCollider(dango.get());
+	}
+
+	// 衝突判定と応答
+	collisionManager_->CheckAllCollision();
 }

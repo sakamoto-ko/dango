@@ -1,16 +1,7 @@
 #pragma once
-#include <Audio.h>
-#include <Input.h>
-#include <Model.h>
-#include <Sprite.h>
-#include <TextureManager.h>
-#include <Vector3.h>
-#include <ViewProjection.h>
-#include <WorldTransform.h>
-#include <memory>
-#include <vector>
+#include "BaseCharacter.h"
 
-class Dango {
+class Dango : public BaseCharacter{
 
 public: // 関数
 	// 初期化
@@ -28,15 +19,28 @@ public: // 関数
 	//画像のセット
 	void SetTextures(const std::vector<uint32_t>& textures) { textures_ = textures; }
 
+	const WorldTransform* GetParent() { return worldTransform_.parent_; }
+
 	// 座標の取得
-	Vector3 GetPosition() { return worldTransform_.translation_; }
+	Vector3 GetPos() { return worldTransform_.translation_; }
 	void SetWorldPosition(Vector3 position) {
 		worldTransform_.translation_ = position;
 		worldTransform_.UpdateMatrix();
 	}
 
-	//死んだかどうかの取得
+	Vector3 GetCenterPosition() const override;
+
+	// プレイヤーに当たったかどうかの取得
+	bool GetIsHit() const { return isHit_; }
+	void SetIsHit(bool flag) { isHit_ = flag; }
+	//画面外に出たかどうかの判定
+	bool GetIsOutOfField() const { return isOutOfField_; }
+	// 死んだかどうかの取得
 	bool GetIsDead() const { return isDead_; }
+	void SetIsDead(bool flag) { isDead_ = flag; }
+
+	// 衝突を検出したら呼び出されるコールバック関数
+	void OnCollision([[maybe_unused]] Collider* other) override;
 
 private: // 関数
 
@@ -63,6 +67,10 @@ private: // 変数
 	// 現在セットしている画像
 	uint32_t currentTex_ = 0u;
 
+	// プレイヤーに当たったかどうか
+	bool isHit_ = false;
+	// 画面外に出たかどうか
+	bool isOutOfField_ = false;
 	// 死んだかどうか
 	bool isDead_ = false;
 };
