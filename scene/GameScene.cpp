@@ -40,62 +40,75 @@ void GameScene::Initialize() {
 
 	// 衝突マネージャの生成と初期化
 	collisionManager_ = std::make_unique<CollisionManager>();
+
+	dangoNum = 0;
+	dangoCooldown = 0;
 }
 
 void GameScene::Update() {
 	// コントローラー
 	// XINPUT_STATE joyState;
 
-	// プレイヤーの更新
-	player_->Update();
+	if (dangoNum < 3) {
 
-	// 団子の生成
-	if (++DangoSpawnCount_ >= DangoSpawnCountMax_) {
-		CreateDango();
-		DangoSpawnCount_ = 0;
-	}
-	for (std::unique_ptr<Dango>& dango : dangos_) {
-		// 団子の更新
-		dango->Update();
-		// 団子がプレイヤーに当たったら
-		if (dango->GetIsHit()) {
-			// プレイヤーの子としてペアレントに登録
-			player_->SetParentPlayer(dango->GetParent());
-			// くっついている団子の数に応じて下に移動
-			dango->SetWorldPosition(Vector3(player_->GetPosition().x, dangoPos[dangoNum], player_->GetPosition().z));
-			dangoNum++;
-			dango->SetIsHit(false);
-			dango->SetIsDead(true);
-		}
-		//プレイヤーにくっついているとき
-		if (dango->GetIsDead()) {
-			dango->SetWorldPosition(Vector3(player_->GetPosition().x, dango->GetPos().y, player_->GetPosition().z));
-		}
-	}
-	// 団子が画面外に出たら団子リストから取り除く
-	dangos_.remove_if([](std::unique_ptr<Dango>& dango) {
-		if (dango->GetIsOutOfField()) {
-			dango.release();
+		// プレイヤーの更新
+		player_->Update();
 
-			return true;
-		};
-		return false;
-	});
-	// プレイヤーにくっついている団子が3個を超えたら団子リストから取り除く
-	if (dangoNum >= 3) {
-		dangos_.remove_if([](std::unique_ptr<Dango>& dango) {
+		// 団子の生成
+		if (++DangoSpawnCount_ >= DangoSpawnCountMax_) {
+			CreateDango();
+			DangoSpawnCount_ = 0;
+		}
+		for (std::unique_ptr<Dango>& dango : dangos_) {
+			// 団子の更新
+			dango->Update();
+			// 団子がプレイヤーに当たったら
+			if (dango->GetIsHit()) {
+				// プレイヤーの子としてペアレントに登録
+				player_->SetParentPlayer(dango->GetParent());
+				// くっついている団子の数に応じて下に移動
+				dango->SetWorldPosition(Vector3(player_->GetPosition().x, dangoPos[dangoNum], player_->GetPosition().z));
+				dangoNum++;
+				dango->SetIsHit(false);
+				dango->SetIsDead(true);
+			}
+			// プレイヤーにくっついているとき
 			if (dango->GetIsDead()) {
+				dango->SetWorldPosition(Vector3(player_->GetPosition().x, dango->GetPos().y, player_->GetPosition().z));
+			}
+		}
+
+		// 衝突判定と応答
+		CheckAllCollisions();
+		// 団子が画面外に出たら団子リストから取り除く
+		dangos_.remove_if([](std::unique_ptr<Dango>& dango) {
+			if (dango->GetIsOutOfField()) {
 				dango.release();
 
 				return true;
 			};
 			return false;
 		});
-		dangoNum = 0;
 	}
 
-	// 衝突判定と応答
-	CheckAllCollisions();
+	// プレイヤーにくっついている団子が3個を超えたら団子リストから取り除く
+	else if (dangoNum >= 3) {
+		dangoCooldown++;
+		if (dangoCooldown >= 60) {
+			dangos_.remove_if([](std::unique_ptr<Dango>& dango) {
+				if (dango->GetIsDead()) {
+					dango.release();
+
+					return true;
+				};
+				return false;
+			});
+			dangoNum = 0;
+			dangoCooldown = 0;
+		}
+	}
+
+	else {}
 }
 
 void GameScene::Draw() {

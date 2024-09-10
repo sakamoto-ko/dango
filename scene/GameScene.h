@@ -81,4 +81,5 @@ private: // メンバ変数
 
 	const float dangoPos[3] = {-3.0f, -2.0f, -1.0f};
 	int dangoNum = 0;
+	int dangoCooldown = 0;
 };
