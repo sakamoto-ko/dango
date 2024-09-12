@@ -10,7 +10,7 @@ void CollisionManager::CheckCollisionPair(Collider* colliderA, Collider* collide
 
 	if (posA.x - 0.15f <= posB.x + colliderB->GetRadius() && 
 		posB.x - colliderB->GetRadius() <= posA.x + 0.15f) {
-		if (posA.y - 2.0f <= posB.y + colliderB->GetRadius() && 
+		if (posA.y - 1.0f <= posB.y + colliderB->GetRadius() && 
 			posB.y - colliderB->GetRadius() <= posA.y + 2.0f) {
 			colliderA->OnCollision(colliderB);
 			colliderB->OnCollision(colliderA);

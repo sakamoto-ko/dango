@@ -27,6 +27,15 @@ void GameScene::Initialize() {
 	// テクスチャ生成
 	CreateTexture();
 
+	// キューブ
+	cubeModel_.reset(Model::CreateFromOBJ("box", true));
+	particleModels = {cubeModel_.get()};
+	for (int i = 0; i < particleMax; i++) {
+		particlePos[i].Initialize();
+		particlePos[i].translation_.z = 40.0f;
+		particlePos[i].scale_ = {0.2f, 0.2f, 0.2f};
+	}
+
 	// プレイヤーモデル生成
 	playerModel_.reset(Model::CreateFromOBJ("player", true));
 	std::vector<Model*> playerModels{
@@ -69,10 +78,10 @@ void GameScene::Initialize() {
 
 	isStart = false;
 
-	//BGM
+	// BGM
 	BGM_ = audio_->LoadWave("BGM/play.wav");
-	//SE
-	hitSe_ = audio_->LoadWave("SE/hit.wav");//団子とプレイヤーのヒット時SE
+	// SE
+	hitSe_ = audio_->LoadWave("SE/hit.wav"); // 団子とプレイヤーのヒット時SE
 }
 
 void GameScene::Update() {
@@ -85,14 +94,13 @@ void GameScene::Update() {
 			isStart = true;
 			StartAudio();
 		}
-	} 
-	else {
+	} else {
 		// 制限時間内なら各種Updateを呼び出す
 		if (timeLimit_ <= timeLimitMax) {
 			// 制限時間用変数をインクリメント
 			timeLimit_++;
 
-			//爆弾が爆発していないなら
+			// 爆弾が爆発していないなら
 			if (!isBakudan) {
 
 				// 団子が三個くっついていないなら各種Updateを呼び出す
@@ -116,6 +124,9 @@ void GameScene::Update() {
 								dango->SetIsHit(false);
 								dango->SetIsDead(true);
 								isBakudan = true;
+								for (int i = 0; i < particleMax; i++) {
+									particlePos[i].translation_ = dango->GetPos();
+								}
 								// 爆弾マイナスポイント
 								score += bakudanPoint;
 							}
@@ -128,6 +139,11 @@ void GameScene::Update() {
 								dango->SetWorldPosition(Vector3(player_->GetPosition().x, dangoPos[dangoNum], player_->GetPosition().z));
 								dangoDiscrimination[dangoNum][getDangoBar] = dango->GetDangoColor();
 								dangoNum++;
+
+								for (int i = 0; i < particleMax; i++) {
+									particlePos[i].translation_ = dango->GetPos();
+								}
+
 								dango->SetIsHit(false);
 								dango->SetIsDead(true);
 							}
@@ -186,6 +202,20 @@ void GameScene::Draw() {
 		// 団子の3D描画
 		for (std::unique_ptr<Dango>& dango : dangos_) {
 			dango->Draw(viewProjection_);
+		}
+
+		// 爆弾パーティクル
+		if (isBakudan) {
+			for (int i = 0; i < particleMax; i++) {
+				particleModels[0]->Draw(particlePos[i], viewProjection_, redTex_);
+			}
+		}
+
+		//団子三個パーティクル
+		if (dangoNum >= 3) {
+			for (int i = 0; i < particleMax; i++) {
+				particleModels[0]->Draw(particlePos[i], viewProjection_, randomTex_[i]);
+			}
 		}
 	}
 
@@ -287,6 +317,7 @@ void GameScene::Reset() {
 
 void GameScene::CreateTexture() {
 	// テクスチャ
+	redTex_ = TextureManager::Load("Dango/red.png");
 	pinkTex_ = TextureManager::Load("Dango/pink.png");
 	greenTex_ = TextureManager::Load("Dango/green.png");
 	whiteTex_ = TextureManager::Load("Dango/white.png");
@@ -486,7 +517,8 @@ void GameScene::CreateTexture() {
 void GameScene::CreateDango() {
 	// 団子モデル生成
 	std::vector<Model*> dangoModels{
-	    dangoModel_.get(), tutuModel_.get(),
+	    dangoModel_.get(),
+	    tutuModel_.get(),
 	};
 	// 団子テクスチャ生成
 	std::vector<uint32_t> dangoTextures{pinkTex_, whiteTex_, greenTex_, blackTex_, tutuTex_};
@@ -518,6 +550,8 @@ void GameScene::DeleteDango() {
 	// プレイヤーにくっついている団子が3個を超えたら団子リストから取り除く
 	if (dangoNum >= 3) {
 		dangoCooldown++;
+		// 団子三個パーティクル
+		PlayParticle();
 		if (dangoCooldown >= 60) {
 			dangos_.remove_if([](std::unique_ptr<Dango>& dango) {
 				if (dango->GetIsDead()) {
@@ -555,6 +589,8 @@ void GameScene::DeleteDango() {
 	});
 	if (isBakudan) {
 		bakudanCount++;
+		// 爆弾パーティクル
+		PlayParticle();
 		if (bakudanCount >= 60) {
 			isBakudan = false;
 			bakudanCount = 0;
@@ -628,6 +664,34 @@ bool GameScene::IsGreen(int dango1, int dango2, int dango3) {
 		return true;
 	}
 	return false;
+}
+
+void GameScene::PlayParticle() {
+	// パーティクルの上限まで表示
+	for (int i = 0; i < particleMax; i++) {
+		//パーティクルの色をランダムでかえる処理
+		if (dangoNum >= 3) {
+			int r = rand() % 3 + 1;
+
+			if (r == 1) {
+				randomTex_[i] = pinkTex_;
+			} else if (r == 2) {
+				randomTex_[i] = whiteTex_;
+			} else if (r == 3) {
+				randomTex_[i] = greenTex_;
+			} else {
+				randomTex_[i] = pinkTex_;
+			}
+		}
+
+		// 傾斜角
+		float theta = 2.0f * (float)M_PI * (float)i / particleMax;
+
+		// 座標の決定
+		particlePos[i].translation_.x += (particleRad * cosf(theta));
+		particlePos[i].translation_.y += (particleRad * sinf(theta));
+		particlePos[i].UpdateMatrix();
+	}
 }
 
 void GameScene::StopAudio() { audio_->StopWave(audioHandle_); }

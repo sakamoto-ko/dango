@@ -1,11 +1,13 @@
 #pragma once
 
+#define _USE_MATH_DEFINES
 #include "CollisionManager.h"
 #include "Dango.h"
 #include "DirectXCommon.h"
 #include "Player.h"
 #include <list>
 #include <memory>
+#include <cmath>
 
 enum Discrimination {
 	NORMALDANGO,
@@ -85,6 +87,9 @@ private:
 	// 緑団子かどうか
 	bool IsGreen(int dango1, int dango2, int dango3);
 
+	//爆発パーティクル
+	void PlayParticle();
+
 private: // メンバ変数
 	DirectXCommon* dxCommon_ = nullptr;
 	Input* input_ = nullptr;
@@ -105,9 +110,11 @@ private: // メンバ変数
 	// モデル
 	std::unique_ptr<Model> playerModel_; // プレイヤー
 	std::unique_ptr<Model> dangoModel_;  // 団子
-	std::unique_ptr<Model> tutuModel_;  // 筒
+	std::unique_ptr<Model> tutuModel_;   // 筒
+	std::unique_ptr<Model> cubeModel_;   // Cube
 
 	// 画像
+	uint32_t redTex_ = 0u;
 	uint32_t pinkTex_ = 0u;
 	uint32_t whiteTex_ = 0u;
 	uint32_t greenTex_ = 0u;
@@ -197,4 +204,11 @@ private: // メンバ変数
 
 	// SE
 	uint32_t hitSe_ = 0u;
+
+	//パーティクル
+	const int particleMax = 50;
+	const float particleRad = 0.3f;
+	std::vector<Model*> particleModels;
+	WorldTransform particlePos[50]{};
+	uint32_t randomTex_[50] = {};
 };
