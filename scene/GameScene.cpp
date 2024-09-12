@@ -42,6 +42,7 @@ void GameScene::Initialize() {
 
 	// 団子モデル生成
 	dangoModel_.reset(Model::CreateFromOBJ("Dango", true));
+	tutuModel_.reset(Model::CreateFromOBJ("tutu", true));
 	// 団子の生成
 	CreateDango();
 
@@ -67,6 +68,11 @@ void GameScene::Initialize() {
 	isDiscrimination = false;
 
 	isStart = false;
+
+	//BGM
+	BGM_ = audio_->LoadWave("BGM/play.wav");
+	//SE
+	hitSe_ = audio_->LoadWave("SE/hit.wav");//団子とプレイヤーのヒット時SE
 }
 
 void GameScene::Update() {
@@ -77,70 +83,78 @@ void GameScene::Update() {
 		startCount++;
 		if (startCount >= 180) {
 			isStart = true;
+			StartAudio();
 		}
-	} else {
+	} 
+	else {
 		// 制限時間内なら各種Updateを呼び出す
 		if (timeLimit_ <= timeLimitMax) {
 			// 制限時間用変数をインクリメント
 			timeLimit_++;
 
-			// 団子が三個くっついていないなら各種Updateを呼び出す
-			if (dangoNum < 3) {
+			//爆弾が爆発していないなら
+			if (!isBakudan) {
 
-				// プレイヤーの更新
-				player_->Update();
+				// 団子が三個くっついていないなら各種Updateを呼び出す
+				if (dangoNum < 3) {
 
-				// 団子の生成
-				if (++DangoSpawnCount_ >= DangoSpawnCountMax_) {
-					CreateDango();
-					DangoSpawnCount_ = 0;
-				}
-				for (std::unique_ptr<Dango>& dango : dangos_) {
-					// 団子の更新
-					dango->Update();
-					// 団子がプレイヤーに当たったら
-					if (dango->GetIsHit()) {
-						// 団子が爆弾だった時
-						if (dango->GetDangoColor() == BOM) {
-							dango->SetIsHit(false);
-							dango->SetIsDead(true);
-							isBakudan = true;
-							// 爆弾マイナスポイント
-							score += bakudanPoint;
+					// プレイヤーの更新
+					player_->Update();
+
+					// 団子の生成
+					if (++DangoSpawnCount_ >= DangoSpawnCountMax_) {
+						CreateDango();
+						DangoSpawnCount_ = 0;
+					}
+					for (std::unique_ptr<Dango>& dango : dangos_) {
+						// 団子の更新
+						dango->Update();
+						// 団子がプレイヤーに当たったら
+						if (dango->GetIsHit()) {
+							// 団子が爆弾だった時
+							if (dango->GetDangoColor() == BOM) {
+								dango->SetIsHit(false);
+								dango->SetIsDead(true);
+								isBakudan = true;
+								// 爆弾マイナスポイント
+								score += bakudanPoint;
+							}
+							// その他
+							else {
+								StartSE();
+								// プレイヤーの子としてペアレントに登録
+								player_->SetParentPlayer(dango->GetParent());
+								// くっついている団子の数に応じて下に移動
+								dango->SetWorldPosition(Vector3(player_->GetPosition().x, dangoPos[dangoNum], player_->GetPosition().z));
+								dangoDiscrimination[dangoNum][getDangoBar] = dango->GetDangoColor();
+								dangoNum++;
+								dango->SetIsHit(false);
+								dango->SetIsDead(true);
+							}
 						}
-						// その他
-						else {
-							// プレイヤーの子としてペアレントに登録
-							player_->SetParentPlayer(dango->GetParent());
-							// くっついている団子の数に応じて下に移動
-							dango->SetWorldPosition(Vector3(player_->GetPosition().x, dangoPos[dangoNum], player_->GetPosition().z));
-							dangoDiscrimination[dangoNum][getDangoBar] = dango->GetDangoColor();
-							dangoNum++;
-							dango->SetIsHit(false);
-							dango->SetIsDead(true);
+						// プレイヤーにくっついているとき
+						if (dango->GetIsDead()) {
+							dango->SetWorldPosition(Vector3(player_->GetPosition().x, dango->GetPos().y, player_->GetPosition().z));
 						}
 					}
-					// プレイヤーにくっついているとき
-					if (dango->GetIsDead()) {
-						dango->SetWorldPosition(Vector3(player_->GetPosition().x, dango->GetPos().y, player_->GetPosition().z));
-					}
+
+					// 衝突判定と応答
+					CheckAllCollisions();
 				}
-
-				// 衝突判定と応答
-				CheckAllCollisions();
+				// 三個くっついたとき
+				else {
+					// 団子の種類の判別とポイント付与
+					DangoDiscrimination();
+				}
 			}
-			// 三個くっついたとき
-			else {
-				// 団子の種類の判別とポイント付与
-				DangoDiscrimination();
-			}
-
 			// 団子削除処理総括関数
 			DeleteDango();
 		}
 		// 制限時間がきたら
 		else {
 			isEnd = true;
+			isBakudan = false;
+			dangoNum = 0;
 		}
 	}
 }
@@ -278,6 +292,8 @@ void GameScene::CreateTexture() {
 	whiteTex_ = TextureManager::Load("Dango/white.png");
 	blackTex_ = TextureManager::Load("Dango/black.png");
 	blownTex_ = TextureManager::Load("Dango/brown.png");
+
+	tutuTex_ = TextureManager::Load("tutu/tutu.png");
 
 	timeUpTex_ = TextureManager::Load("UI/timeUp.png");
 	timeUpSprite_.reset(Sprite::Create(timeUpTex_, {0.0f, 0.0f}));
@@ -470,10 +486,10 @@ void GameScene::CreateTexture() {
 void GameScene::CreateDango() {
 	// 団子モデル生成
 	std::vector<Model*> dangoModels{
-	    dangoModel_.get(),
+	    dangoModel_.get(), tutuModel_.get(),
 	};
 	// 団子テクスチャ生成
-	std::vector<uint32_t> dangoTextures{pinkTex_, whiteTex_, greenTex_, blackTex_};
+	std::vector<uint32_t> dangoTextures{pinkTex_, whiteTex_, greenTex_, blackTex_, tutuTex_};
 
 	// 団子の生成と初期化
 	std::unique_ptr<Dango> newDango = std::make_unique<Dango>();
@@ -613,3 +629,11 @@ bool GameScene::IsGreen(int dango1, int dango2, int dango3) {
 	}
 	return false;
 }
+
+void GameScene::StopAudio() { audio_->StopWave(audioHandle_); }
+
+void GameScene::StartAudio() { audioHandle_ = audio_->PlayWave(BGM_, true, 1); }
+
+void GameScene::StartSE() { audio_->PlayWave(hitSe_, false, 1.0f); }
+
+void GameScene::StopSE() {}

@@ -81,6 +81,7 @@ private: // 変数
 
 	// ワールドトランスフォーム
 	WorldTransform worldTransform_;
+	WorldTransform worldTransformTutu_;
 	// 速度
 	Vector3 velocity_;
 	// モデル
@@ -104,6 +105,7 @@ private: // 変数
 	LightGroup* light = new LightGroup();
 
 	Vector3 tmpPos{};
+	Vector3 tmpPosTutu{};
 	bool isShake = false;
 	bool isShakeStart = false;
 	bool isShakeFinish = false;

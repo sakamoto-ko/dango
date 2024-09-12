@@ -62,6 +62,8 @@ void ScoreScene::Initialize() {
 
 	count = 0;
 	isSpace = false;
+
+	BGM_ = audio_->LoadWave("BGM/result.wav");
 }
 
 void ScoreScene::Update() {
@@ -116,3 +118,7 @@ void ScoreScene::Reset() {
 	count = 0;
 	isSpace = false;
 }
+
+void ScoreScene::StopAudio() { audio_->StopWave(audioHandle_); }
+
+void ScoreScene::StartAudio() { audioHandle_ = audio_->PlayWave(BGM_, true, 1); }

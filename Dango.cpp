@@ -23,9 +23,12 @@ void Dango::Initialize(const std::vector<Model*>& models, const std::vector<uint
 	// 座標のリセット
 	worldTransform_.Initialize();
 	worldTransform_.translation_ = {0.0f, 5.0f, -40.0f};
-	worldTransform_.scale_ = {0.45f, 0.45f, 0.45f};
 	// ランダムX座標スポーン
 	worldTransform_.translation_.x = float(rand() % 8 - 4);
+	
+	worldTransformTutu_.Initialize();
+	worldTransformTutu_.parent_ = &worldTransform_;
+	worldTransform_.translation_ = {worldTransform_.translation_.x, 4.3f, -40.0f};
 
 	// タグ付け
 	Collider::SetTypeID(static_cast<uint32_t>(CollisionTypeIdDef::kDango));
@@ -67,13 +70,26 @@ void Dango::Update() {
 		worldTransform_.translation_.y -= velocity_.y * 0.01f;
 	}
 
+	//サイズ
+	if (currentTex_ == textures_[3]) {
+		worldTransform_.scale_ = {0.4f, 0.4f, 0.4f};
+	} else {
+		worldTransform_.scale_ = {0.45f, 0.45f, 0.45f};
+	}
+
 	// 座標の更新
 	worldTransform_.UpdateMatrix();
+	worldTransformTutu_.UpdateMatrix();
 }
 
 // 3D描画
 void Dango::Draw(const ViewProjection& viewProjection) {
-	models_[0]->Draw(worldTransform_, viewProjection, currentTex_);
+	if (currentTex_ == textures_[3]) {
+		models_[0]->Draw(worldTransform_, viewProjection, currentTex_);
+		models_[1]->Draw(worldTransformTutu_, viewProjection, textures_[4]);
+	} else {
+		models_[0]->Draw(worldTransform_, viewProjection, currentTex_);
+	}
 }
 
 // 2D描画

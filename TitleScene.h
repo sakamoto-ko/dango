@@ -31,6 +31,9 @@ public:
 
 	void Reset();
 
+	void StopAudio();
+	void StartAudio();
+
 private:// メンバ変数
 	DirectXCommon* dxCommon_ = nullptr;
 	Input* input_ = nullptr;
@@ -51,4 +54,8 @@ private:// メンバ変数
 	int count = 0;
 
 	int isSpace = false;
+
+	// BGM
+	uint32_t BGM_ = 0u;
+	uint32_t audioHandle_ = 0u;
 };

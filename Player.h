@@ -82,4 +82,7 @@ private: // 変数
 	bool isShakeStart = false;
 	bool isShake = false;
 	bool isShakeFinish = false;
+
+	bool isLeft = false;
+	bool isRight = false;
 };

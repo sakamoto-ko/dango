@@ -51,6 +51,12 @@ public: // メンバ関数
 
 	void Reset();
 
+	void StopAudio();
+	void StartAudio();
+
+	void StartSE();
+	void StopSE();
+
 private:
 	// テクスチャ一斉生成用関数
 	void CreateTexture();
@@ -99,6 +105,7 @@ private: // メンバ変数
 	// モデル
 	std::unique_ptr<Model> playerModel_; // プレイヤー
 	std::unique_ptr<Model> dangoModel_;  // 団子
+	std::unique_ptr<Model> tutuModel_;  // 筒
 
 	// 画像
 	uint32_t pinkTex_ = 0u;
@@ -144,6 +151,8 @@ private: // メンバ変数
 	std::unique_ptr<Sprite> nextSprite_;
 	uint32_t nextTex_ = 0u;
 
+	uint32_t tutuTex_ = 0u;
+
 	// 団子スポーン間隔
 	int DangoSpawnCount_ = 0;
 	int DangoSpawnCountMax_ = 60;
@@ -181,4 +190,11 @@ private: // メンバ変数
 	int startCount = 0;
 
 	bool isEnd = false;
+
+	// BGM
+	uint32_t BGM_ = 0u;
+	uint32_t audioHandle_ = 0u;
+
+	// SE
+	uint32_t hitSe_ = 0u;
 };

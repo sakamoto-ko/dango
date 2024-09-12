@@ -20,6 +20,9 @@ public:
 
 	Scene GetScene() { return scene; }
 
+	void StartSE();
+	void StopSE();
+
 private:// メンバ変数
 	DirectXCommon* dxCommon_ = nullptr;
 	Input* input_ = nullptr;
@@ -30,4 +33,7 @@ private:// メンバ変数
 	ScoreScene* scoreScene = new ScoreScene();
 
 	Scene scene = TITLE;
+
+	// SE
+	uint32_t decisionSe_ = 0u;
 };

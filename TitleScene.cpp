@@ -38,6 +38,9 @@ void TitleScene::Initialize() {
 	startSprite_->SetSize({960.0f, 540.0f});
 	startSprite_->SetPosition({150.0f, 340.0f});
 
+	BGM_ = audio_->LoadWave("BGM/title.wav");
+	StartAudio();
+
 	count = 0;
 	isSpace = false;
 }
@@ -94,3 +97,7 @@ void TitleScene::Reset() {
 	count = 0;
 	isSpace = false;
 }
+
+void TitleScene::StopAudio() { audio_->StopWave(audioHandle_); }
+
+void TitleScene::StartAudio() { audioHandle_ = audio_->PlayWave(BGM_, true, 0.8f); }
