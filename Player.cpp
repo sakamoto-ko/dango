@@ -1,12 +1,16 @@
 #include "Player.h"
 
 // 初期化
-void Player::Initialize(const std::vector<Model*>& models) {
+void Player::Initialize(const std::vector<Model*>& models, const std::vector<uint32_t>& textures) {
 	input_ = Input::GetInstance();
 	audio_ = Audio::GetInstance();
 
 	// モデルの作成
 	SetModels(models);
+	// テクスチャの生成
+	SetTextures(textures);
+	currentTex_ = textures_[0];
+
 	// 速度のリセット
 	velocity_ = {0.0f, 0.0f, 0.0f};
 	// 座標のリセット
@@ -36,21 +40,17 @@ void Player::Update() {
 
 	// 移動
 	worldTransform_.translation_ += velocity_;
+
 	// 画面外処理
 	worldTransform_.translation_.x = Clamp(worldTransform_.translation_.x, -5.0f, 5.0f);
+	
 	// 座標の更新
 	worldTransform_.UpdateMatrix();
-
-	//くっついている団子の数が３個を超えたら0に戻す
-	if (dangoCount_ >= 3) {
-		dangoCount_ = 0;
-	}
 }
 
 // 3D描画
 void Player::Draw(const ViewProjection& viewProjection) {
-	// プレイヤーの描画
-	models_[0]->Draw(worldTransform_, viewProjection);
+	models_[0]->Draw(worldTransform_, viewProjection, currentTex_);
 }
 
 // 2D描画
@@ -62,10 +62,17 @@ Vector3 Player::GetCenterPosition() const {
 	return worldPos;
 }
 
-void Player::OnCollision([[maybe_unused]] Collider* other) {
-	dangoCount_++;
-}
+void Player::OnCollision([[maybe_unused]] Collider* other) {}
 
 void Player::SetParentPlayer(const WorldTransform* parent) { 
 	parent = &worldTransform_; 
+}
+
+void Player::Reset() {
+	currentTex_ = textures_[0];
+
+	// 速度のリセット
+	velocity_ = {0.0f, 0.0f, 0.0f};
+	// 座標のリセット
+	worldTransform_.translation_ = {0.0f, -4.0f, -40.0f};
 }

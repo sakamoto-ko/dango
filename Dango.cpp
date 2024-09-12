@@ -33,6 +33,25 @@ void Dango::Initialize(const std::vector<Model*>& models, const std::vector<uint
 	isHit_ = false;
 	isOutOfField_ = false;
 	isDead_ = false;
+
+	/*light->SetDirLightActive(0, false);
+	light->SetDirLightActive(1, false);
+	light->SetDirLightActive(2, false);
+	light->SetSpotLightActive(0, false);
+	light->SetSpotLightActive(1, false);
+	light->SetSpotLightActive(2, false);
+	light->SetPointLightActive(0, false);
+	light->SetPointLightActive(1, false);
+	light->SetPointLightActive(2, false);
+	light->SetAmbientColor(Vector3(1, 1, 1));
+	light->SetCircleShadowActive(0, false);*/
+	/*light->SetSpotLightPos(0, Vector3{0, 0, 0});
+	light->SetSpotLightPos(1, Vector3{0, 0, 0});
+	light->SetSpotLightPos(2, Vector3{0, 0, 0});
+	light->SetPointLightPos(0, Vector3{0, 0, 0});
+	light->SetPointLightPos(1, Vector3{0, 0, 0});
+	light->SetPointLightPos(2, Vector3{0, 0, 0});
+	light->SetCircleShadowCasterPos(0, Vector3{0, 0, 0});*/
 }
 
 // 更新
@@ -43,7 +62,7 @@ void Dango::Update() {
 	}
 
 	// 移動
-	if (!isDead_) {
+	if (!isDead_ && !isShake) {
 		//  下方向
 		worldTransform_.translation_.y -= velocity_.y * 0.01f;
 	}
@@ -54,7 +73,6 @@ void Dango::Update() {
 
 // 3D描画
 void Dango::Draw(const ViewProjection& viewProjection) {
-	// プレイヤーの描画
 	models_[0]->Draw(worldTransform_, viewProjection, currentTex_);
 }
 
@@ -70,10 +88,28 @@ Vector3 Dango::GetCenterPosition() const {
 void Dango::OnCollision([[maybe_unused]] Collider* other) {
 	uint32_t typeID = other->GetTypeID();
 
-	//衝突相手がプレイヤーなら
+	// 衝突相手がプレイヤーなら
 	if (typeID == static_cast<uint32_t>(CollisionTypeIdDef::kPlayer)) {
 		if (!isDead_) {
 			isHit_ = true;
 		}
+	}
+}
+
+int Dango::GetDangoColor() {
+	if (currentTex_ == textures_[1]) {
+		return WHITE;
+	} 
+	else if (currentTex_ == textures_[2]) {
+		return GREEN;
+	} 
+	else if (currentTex_ == textures_[0]) {
+		return PINK;
+	} 
+	else if (currentTex_ == textures_[3]) {
+		return BOM;
+	} 
+	else {
+		return WHITE;
 	}
 }

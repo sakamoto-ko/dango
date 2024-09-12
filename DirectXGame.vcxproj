@@ -119,7 +119,11 @@
     <ClCompile Include="math\Vector3.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Rand.cpp" />
+    <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="scene\GameScene.cpp" />
+    <ClCompile Include="ScoreScene.cpp" />
+    <ClCompile Include="ShakeCamera.cpp" />
+    <ClCompile Include="TitleScene.cpp" />
     <ClCompile Include="WorldTransformEx.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -158,8 +162,12 @@
     <ClInclude Include="math\Vector4.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Rand.h" />
+    <ClInclude Include="SceneManager.h" />
     <ClInclude Include="scene\GameScene.h" />
     <ClInclude Include="scene\scene.h" />
+    <ClInclude Include="ScoreScene.h" />
+    <ClInclude Include="ShakeCamera.h" />
+    <ClInclude Include="TitleScene.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\TerrainPS.hlsl">

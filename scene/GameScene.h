@@ -1,11 +1,19 @@
 #pragma once
 
+#include "CollisionManager.h"
+#include "Dango.h"
 #include "DirectXCommon.h"
+#include "Player.h"
 #include <list>
 #include <memory>
-#include "Player.h"
-#include "Dango.h"
-#include "CollisionManager.h"
+
+enum Discrimination {
+	NORMALDANGO,
+	SIRODANGO,
+	PINKDANGO,
+	MIDORIDANGO,
+	SANSHOKUDANGO,
+};
 
 /// <summary>
 /// ゲームシーン
@@ -38,15 +46,38 @@ public: // メンバ関数
 	/// </summary>
 	void Draw();
 
+	bool GetIsEnd() { return isEnd; }
+	void SetIsEnd(bool flag) { isEnd = flag; }
+
+	void Reset();
+
 private:
-	//テクスチャ一斉生成用関数
+	// テクスチャ一斉生成用関数
 	void CreateTexture();
 
-	//団子の生成
+	// 団子の生成
 	void CreateDango();
 
-	//衝突判定と応答
+	// 衝突判定と応答
 	void CheckAllCollisions();
+
+	// 団子を消す処理の総括
+	void DeleteDango();
+
+	// 三個くっついた団子の種類を判別するやつ
+	void DangoDiscrimination();
+
+	// 三色団子かどうか
+	bool IsSanshoku(int dango1, int dango2, int dango3);
+
+	// 白団子かどうか
+	bool IsWhite(int dango1, int dango2, int dango3);
+
+	// ピンク団子かどうか
+	bool IsPink(int dango1, int dango2, int dango3);
+
+	// 緑団子かどうか
+	bool IsGreen(int dango1, int dango2, int dango3);
 
 private: // メンバ変数
 	DirectXCommon* dxCommon_ = nullptr;
@@ -62,7 +93,7 @@ private: // メンバ変数
 	// 団子
 	std::list<std::unique_ptr<Dango>> dangos_;
 
-	//衝突マネージャー
+	// 衝突マネージャー
 	std::unique_ptr<CollisionManager> collisionManager_;
 
 	// モデル
@@ -74,12 +105,80 @@ private: // メンバ変数
 	uint32_t whiteTex_ = 0u;
 	uint32_t greenTex_ = 0u;
 	uint32_t blackTex_ = 0u;
+	uint32_t blownTex_ = 0u;
 
-	//団子スポーン間隔
+	std::unique_ptr<Sprite> numSprite_[10];
+	uint32_t numTex_[10] = {};
+
+	std::unique_ptr<Sprite> scoreSprite_;
+	uint32_t scoreTex_ = 0u;
+
+	std::unique_ptr<Sprite> pointSprite_;
+	uint32_t pointTex_ = 0u;
+
+	uint32_t normalTex_ = 0u;
+	uint32_t kusaTex_ = 0u;
+	uint32_t siroTex_ = 0u;
+	uint32_t momoTex_ = 0u;
+	uint32_t sansyokuTex_ = 0u;
+	std::unique_ptr<Sprite> currentDangoSprite_[5];
+
+	std::unique_ptr<Sprite> startSprite_;
+	uint32_t startTex_ = 0u;
+
+	std::unique_ptr<Sprite> finishSprite_;
+	uint32_t finishTex_ = 0u;
+
+	std::unique_ptr<Sprite> baclSprite_;
+	uint32_t backTex_ = 0u;
+
+	std::unique_ptr<Sprite> timeUpSprite_;
+	uint32_t timeUpTex_ = 0u;
+
+	std::unique_ptr<Sprite> bombSprite_;
+	uint32_t bombTex_ = 0u;
+
+	std::unique_ptr<Sprite> yoiSprite_;
+	uint32_t yoiTex_ = 0u;
+
+	std::unique_ptr<Sprite> nextSprite_;
+	uint32_t nextTex_ = 0u;
+
+	// 団子スポーン間隔
 	int DangoSpawnCount_ = 0;
 	int DangoSpawnCountMax_ = 60;
 
 	const float dangoPos[3] = {-3.0f, -2.0f, -1.0f};
 	int dangoNum = 0;
 	int dangoCooldown = 0;
+
+	// 制限時間
+	int timeLimit_ = 0;
+	const int timeLimitMax = 1800;
+
+	// 団子種類判別用補完変数
+	int dangoDiscrimination[3][20] = {};
+	int getDangoBar = 0;
+
+	int discrimination[20] = {};
+
+	// スコア
+	int score = 0;
+	const int bakudanPoint = -50;
+	const int normalPoint = 50;
+	const int isshokuPoint = 75;
+	const int sanshokuPoint = 100;
+
+	bool isDiscrimination = false;
+
+	bool isBakudan = false;
+	int bakudanCount = 0;
+
+	std::unique_ptr<Sprite> backGroundSprite_;
+	uint32_t backGroundTex_ = 0u;
+
+	bool isStart = false;
+	int startCount = 0;
+
+	bool isEnd = false;
 };

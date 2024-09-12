@@ -3,5 +3,5 @@
 typedef enum {
 	TITLE,
 	GAME,
-	RESET,
+	SCORE,
 } Scene;

@@ -1,5 +1,13 @@
 #pragma once
 #include "BaseCharacter.h"
+#include "LightGroup.h"
+
+enum DangoColor {
+	WHITE,
+	GREEN,
+	PINK,
+	BOM,
+};
 
 class Dango : public BaseCharacter{
 
@@ -42,6 +50,18 @@ public: // 関数
 	// 衝突を検出したら呼び出されるコールバック関数
 	void OnCollision([[maybe_unused]] Collider* other) override;
 
+	//団子の色の取得
+	int GetDangoColor();
+
+	void SetViewProjection(const ViewProjection* viewProjection) { viewProjection_ = viewProjection; }
+
+	void SetTmpPos(Vector3 pos) { tmpPos = pos; }
+	const Vector3 GetTmpPos() { return tmpPos; }
+
+	void SetIsShakeStart(bool flag) { isShakeStart = flag; }
+	void SetIsShakeFinish(bool flag) { isShakeFinish = flag; }
+	const bool GetIsShake() { return isShake; }
+
 private: // 関数
 
 public:  // 変数
@@ -55,6 +75,9 @@ private: // 変数
 	// 入力クールタイム
 	const int kInputCoolTime = 5;
 	int inputCoolTimer_ = 0;
+
+	// カメラのビュープロジェクション
+	const ViewProjection* viewProjection_ = nullptr;
 
 	// ワールドトランスフォーム
 	WorldTransform worldTransform_;
@@ -73,4 +96,15 @@ private: // 変数
 	bool isOutOfField_ = false;
 	// 死んだかどうか
 	bool isDead_ = false;
+	
+	CircleShadow* shadow1 = new CircleShadow();
+	DirectionalLight* shadow2 = new DirectionalLight();
+	PointLight* shadow3 = new PointLight();
+	SpotLight* shadow4 = new SpotLight();
+	LightGroup* light = new LightGroup();
+
+	Vector3 tmpPos{};
+	bool isShake = false;
+	bool isShakeStart = false;
+	bool isShakeFinish = false;
 };
