@@ -92,6 +92,9 @@ private:
 	//点数の獲得
 	void GetPoint();
 
+	//制限時間の計算
+	void TimeCulc();
+
 	//パーティクル
 	void PlayParticle();
 

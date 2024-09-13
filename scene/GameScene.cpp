@@ -93,6 +93,7 @@ void GameScene::Update() {
 		if (timeLimit_ <= timeLimitMax) {
 			// 制限時間用変数をインクリメント
 			timeLimit_++;
+			TimeCulc();
 
 			// 爆弾が爆発していないなら
 			if (!isBakudan) {
@@ -230,33 +231,37 @@ void GameScene::Draw() {
 		dango->DrawUI();
 	}
 
-	// 制限時間がきたら
-	if (timeLimit_ >= timeLimitMax) {
-		timeUpSprite_->Draw();
-		nextSprite_->Draw();
-	}
-
-	if (dangoNum >= 3) {
-		currentDangoSprite_[discrimination]->Draw();
-		for (int i = 0; i < 3; i++) {
-			currentScoreprite_[i]->Draw();
-		}
-		pointSprite_->Draw();
-	}
-
-	if (isBakudan) {
-		bombSprite_->Draw();
-		for (int i = 0; i < 3; i++) {
-			currentScoreprite_[i]->Draw();
-		}
-		pointSprite_->Draw();
-	}
-
 	if (!isStart) {
 		if (startCount < 90) {
 			yoiSprite_->Draw();
 		} else {
 			startSprite_->Draw();
+		}
+	} else {
+		if (dangoNum >= 3) {
+			currentDangoSprite_[discrimination]->Draw();
+			for (int i = 0; i < 3; i++) {
+				currentScoreprite_[i]->Draw();
+			}
+			pointSprite_->Draw();
+		}
+
+		if (isBakudan) {
+			bombSprite_->Draw();
+			for (int i = 0; i < 3; i++) {
+				currentScoreprite_[i]->Draw();
+			}
+			pointSprite_->Draw();
+		}
+
+		// 制限時間の表示
+		for (int i = 0; i < 3; i++) {
+			numSprite_[i]->Draw();
+		}
+		// 制限時間がきたら
+		if (timeLimit_ >= timeLimitMax) {
+			timeUpSprite_->Draw();
+			nextSprite_->Draw();
 		}
 	}
 
@@ -349,8 +354,8 @@ void GameScene::CreateTexture() {
 		        0.0f,
 		    },
 		    {256.0f, 256.0f});
-		numSprite_[i]->SetSize({64.0f, 64.0f});
-		numSprite_[i]->SetPosition({0.0f, 0.0f});
+		numSprite_[i]->SetSize({182.0f, 182.0f});
+		numSprite_[i]->SetPosition({200.0f - (float)i * 96.0f, 0.0f});
 	}
 
 	scoreTex_ = TextureManager::Load("UI/score.png");
@@ -698,6 +703,18 @@ void GameScene::GetPoint() {
 	// ノーマルだんご
 	else {
 		score += normalPoint;
+	}
+}
+
+void GameScene::TimeCulc() {
+	int tmpNum = timeLimit_ / 60;
+	int i = 0;
+
+	while (i < 3) {
+		int dight = tmpNum % 10;
+		numSprite_[i]->SetTextureHandle(numTex_[dight]);
+		i++;
+		tmpNum /= 10;
 	}
 }
 
