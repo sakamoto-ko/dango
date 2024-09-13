@@ -8,6 +8,7 @@
 #include <ViewProjection.h>
 #include <WorldTransform.h>
 #include "DirectXCommon.h"
+#include "Transition.h"
 
 class ScoreScene {
 public:
@@ -24,7 +25,7 @@ public:
 	/// <summary>
 	/// 描画
 	/// </summary>
-	void Draw();
+	void Draw(Transition* transition);
 
 	const bool GetIsSpace() { return isSpace; }
 	void SetIsSpace(bool flag) { isSpace = flag; }
@@ -58,6 +59,7 @@ private: // メンバ変数
 
 	std::unique_ptr<Sprite> numSprite_[5];
 	uint32_t numTex_[10] = {};
+	uint32_t minusTex_ = {};
 
 	int count = 0;
 

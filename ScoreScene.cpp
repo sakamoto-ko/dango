@@ -56,6 +56,7 @@ void ScoreScene::Initialize() {
 	numTex_[7] = TextureManager::Load("UI/number/7.png");
 	numTex_[8] = TextureManager::Load("UI/number/8.png");
 	numTex_[9] = TextureManager::Load("UI/number/9.png");
+	minusTex_ = TextureManager::Load("UI/number/mainasu.png");
 
 	count = 0;
 	isSpace = false;
@@ -72,7 +73,7 @@ void ScoreScene::Update() {
 	// PlayParticle();
 }
 
-void ScoreScene::Draw() {
+void ScoreScene::Draw(Transition* transition) {
 	// コマンドリストの取得
 	ID3D12GraphicsCommandList* commandList = dxCommon_->GetCommandList();
 
@@ -108,9 +109,12 @@ void ScoreScene::Draw() {
 
 	backSprite_->Draw();
 
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 5; i++) {
 		numSprite_[i]->Draw();
 	}
+
+	// 画面遷移
+	transition->Draw();
 
 	// スプライト描画後処理
 	Sprite::PostDraw();
@@ -138,21 +142,52 @@ void ScoreScene::PlayParticle() {
 }
 
 void ScoreScene::ScoreCalc(int score) {
-	int tmpNum = score;
-	int i = 0;
-
-	while (i < 5) {
-		int dight = tmpNum % 10;
-		numSprite_[i].reset(Sprite::Create(numTex_[dight], {0.0f, 0.0f}));
-		numSprite_[i]->SetTextureRect(
+	//得点がマイナスのとき
+	if (score < 0) {
+		numSprite_[4].reset(Sprite::Create(minusTex_, {0.0f, 0.0f}));
+		numSprite_[4]->SetTextureRect(
 		    {
 		        0.0f,
 		        0.0f,
 		    },
 		    {256.0f, 256.0f});
-		numSprite_[i]->SetSize({256.0f, 256.0f});
-		numSprite_[i]->SetPosition({720.0f - (float)i * 128.0f, 220.0f});
-		i++;
-		tmpNum /= 10;
+		numSprite_[4]->SetSize({256.0f, 256.0f});
+		numSprite_[4]->SetPosition({720.0f - 4.0f * 128.0f, 220.0f});
+		int tmpNum = -score;
+		int i = 0;
+		while (i < 4) {
+			int dight = tmpNum % 10;
+			numSprite_[i].reset(Sprite::Create(numTex_[dight], {0.0f, 0.0f}));
+			numSprite_[i]->SetTextureRect(
+			    {
+			        0.0f,
+			        0.0f,
+			    },
+			    {256.0f, 256.0f});
+			numSprite_[i]->SetSize({256.0f, 256.0f});
+			numSprite_[i]->SetPosition({720.0f - (float)i * 128.0f, 220.0f});
+			i++;
+			tmpNum /= 10;
+		}
+	} 
+	//得点がプラスの時
+	else {
+		int tmpNum = score;
+		int i = 0;
+
+		while (i < 5) {
+			int dight = tmpNum % 10;
+			numSprite_[i].reset(Sprite::Create(numTex_[dight], {0.0f, 0.0f}));
+			numSprite_[i]->SetTextureRect(
+			    {
+			        0.0f,
+			        0.0f,
+			    },
+			    {256.0f, 256.0f});
+			numSprite_[i]->SetSize({256.0f, 256.0f});
+			numSprite_[i]->SetPosition({720.0f - (float)i * 128.0f, 220.0f});
+			i++;
+			tmpNum /= 10;
+		}
 	}
 }

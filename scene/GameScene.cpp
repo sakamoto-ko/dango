@@ -76,6 +76,9 @@ void GameScene::Initialize() {
 	BGM_ = audio_->LoadWave("BGM/play.wav");
 	// SE
 	hitSe_ = audio_->LoadWave("SE/hit.wav"); // 団子とプレイヤーのヒット時SE
+	bombSe_ = audio_->LoadWave("SE/bomb.wav"); // 爆弾とプレイヤーのヒット時SE
+	yoiSe_ = audio_->LoadWave("SE/yoi.wav"); //よーい
+	startSe_ = audio_->LoadWave("SE/start.wav"); //すたーと
 }
 
 void GameScene::Update() {
@@ -84,6 +87,12 @@ void GameScene::Update() {
 
 	if (!isStart) {
 		startCount++;
+		if (startCount <= 1) {
+			StartYoiSE();
+		}
+		if (startCount == 90) {
+			StartStartSE();
+		}
 		if (startCount >= 180) {
 			isStart = true;
 			StartAudio();
@@ -116,19 +125,20 @@ void GameScene::Update() {
 						if (dango->GetIsHit()) {
 							// 団子が爆弾だった時
 							if (dango->GetDangoColor() == BOM) {
-								dango->SetIsHit(false);
-								dango->SetIsDead(true);
+								StartBombSE();
 								isBakudan = true;
 								currentScoreprite_[0]->SetTextureHandle(numTex_[0]);
 								currentScoreprite_[1]->SetTextureHandle(numTex_[5]);
-								currentScoreprite_[2]->SetTextureHandle(numTex_[0]);
+								currentScoreprite_[2]->SetTextureHandle(minusTex_);
 								for (int i = 0; i < particleMax; i++) {
 									particlePos[i].translation_ = dango->GetPos();
 								}
+								dango->SetIsHit(false);
+								dango->SetIsDead(true);
 							}
 							// その他
 							else {
-								StartSE();
+								StartHitSE();
 								// プレイヤーの子としてペアレントに登録
 								player_->SetParentPlayer(dango->GetParent());
 								// くっついている団子の数に応じて下に移動
@@ -171,7 +181,7 @@ void GameScene::Update() {
 	}
 }
 
-void GameScene::Draw() {
+void GameScene::Draw(Transition* transition) {
 	// コマンドリストの取得
 	ID3D12GraphicsCommandList* commandList = dxCommon_->GetCommandList();
 
@@ -223,14 +233,6 @@ void GameScene::Draw() {
 	// 前景スプライト描画前処理
 	Sprite::PreDraw(commandList);
 
-	// プレイヤーの2D描画
-	player_->DrawUI();
-
-	// 団子の2D描画
-	for (std::unique_ptr<Dango>& dango : dangos_) {
-		dango->DrawUI();
-	}
-
 	if (!isStart) {
 		if (startCount < 90) {
 			yoiSprite_->Draw();
@@ -238,6 +240,14 @@ void GameScene::Draw() {
 			startSprite_->Draw();
 		}
 	} else {
+		// プレイヤーの2D描画
+		player_->DrawUI();
+
+		// 団子の2D描画
+		for (std::unique_ptr<Dango>& dango : dangos_) {
+			dango->DrawUI();
+		}
+
 		if (dangoNum >= 3) {
 			currentDangoSprite_[discrimination]->Draw();
 			for (int i = 0; i < 3; i++) {
@@ -264,6 +274,9 @@ void GameScene::Draw() {
 			nextSprite_->Draw();
 		}
 	}
+
+	// 画面遷移
+	transition->Draw();
 
 	// スプライト描画後処理
 	Sprite::PostDraw();
@@ -312,6 +325,8 @@ void GameScene::Reset() {
 	startCount = 0;
 
 	isEnd = false;
+	isYoiEnd = false;
+	yoiCount = 0;
 }
 
 void GameScene::CreateTexture() {
@@ -346,6 +361,7 @@ void GameScene::CreateTexture() {
 	numTex_[7] = TextureManager::Load("UI/number/7.png");
 	numTex_[8] = TextureManager::Load("UI/number/8.png");
 	numTex_[9] = TextureManager::Load("UI/number/9.png");
+	minusTex_ = TextureManager::Load("UI/number/mainasu.png");
 	for (int i = 0; i < 10; i++) {
 		numSprite_[i].reset(Sprite::Create(numTex_[i], {0.0f, 0.0f}));
 		numSprite_[i]->SetTextureRect(
@@ -750,6 +766,9 @@ void GameScene::StopAudio() { audio_->StopWave(audioHandle_); }
 
 void GameScene::StartAudio() { audioHandle_ = audio_->PlayWave(BGM_, true, 1); }
 
-void GameScene::StartSE() { audio_->PlayWave(hitSe_, false, 1.0f); }
+void GameScene::StartHitSE() { audio_->PlayWave(hitSe_, false, 1.0f); }
+void GameScene::StartBombSE() { audio_->PlayWave(bombSe_, false, 2.0f); }
+void GameScene::StartYoiSE() { audio_->PlayWave(yoiSe_, false, 2.0f); }
+void GameScene::StartStartSE() { audio_->PlayWave(startSe_, false, 2.0f); }
 
 void GameScene::StopSE() {}

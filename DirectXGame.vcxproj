@@ -124,6 +124,7 @@
     <ClCompile Include="ScoreScene.cpp" />
     <ClCompile Include="ShakeCamera.cpp" />
     <ClCompile Include="TitleScene.cpp" />
+    <ClCompile Include="Transition.cpp" />
     <ClCompile Include="WorldTransformEx.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -168,6 +169,7 @@
     <ClInclude Include="ScoreScene.h" />
     <ClInclude Include="ShakeCamera.h" />
     <ClInclude Include="TitleScene.h" />
+    <ClInclude Include="Transition.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\TerrainPS.hlsl">

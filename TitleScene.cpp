@@ -46,13 +46,13 @@ void TitleScene::Initialize() {
 }
 
 void TitleScene::Update() {
-	//キーディレイ
+	// キーディレイ
 	if (++count >= 20) {
 		isSpace = true;
 	}
 }
 
-void TitleScene::Draw() {
+void TitleScene::Draw(Transition* transition) {
 	// コマンドリストの取得
 	ID3D12GraphicsCommandList* commandList = dxCommon_->GetCommandList();
 
@@ -83,6 +83,9 @@ void TitleScene::Draw() {
 	titleSprite_->Draw();
 
 	startSprite_->Draw();
+
+	// 画面遷移
+	transition->Draw();
 
 	// スプライト描画後処理
 	Sprite::PostDraw();

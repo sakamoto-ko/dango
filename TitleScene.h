@@ -8,6 +8,7 @@
 #include <ViewProjection.h>
 #include <WorldTransform.h>
 #include "DirectXCommon.h"
+#include "Transition.h"
 
 class TitleScene {
 public:
@@ -24,7 +25,7 @@ public:
 	/// <summary>
 	/// 描画
 	/// </summary>
-	void Draw();
+	void Draw(Transition* transition);
 
 	const bool GetIsSpace() { return isSpace; }
 	void SetIsSpace(bool flag) { isSpace = flag; }

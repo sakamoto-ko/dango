@@ -8,6 +8,7 @@
 #include <list>
 #include <memory>
 #include <cmath>
+#include "Transition.h"
 
 enum Discrimination {
 	NORMALDANGO,
@@ -46,7 +47,7 @@ public: // メンバ関数
 	/// <summary>
 	/// 描画
 	/// </summary>
-	void Draw();
+	void Draw(Transition* transition);
 
 	bool GetIsEnd() { return isEnd; }
 	void SetIsEnd(bool flag) { isEnd = flag; }
@@ -56,7 +57,10 @@ public: // メンバ関数
 	void StopAudio();
 	void StartAudio();
 
-	void StartSE();
+	void StartHitSE();
+	void StartBombSE();
+	void StartYoiSE();
+	void StartStartSE();
 	void StopSE();
 
 	int GetScore() { return score; }
@@ -131,6 +135,7 @@ private: // メンバ変数
 
 	std::unique_ptr<Sprite> numSprite_[10];
 	uint32_t numTex_[10] = {};
+	uint32_t minusTex_ = {};
 
 	std::unique_ptr<Sprite> scoreSprite_;
 	uint32_t scoreTex_ = 0u;
@@ -213,6 +218,12 @@ private: // メンバ変数
 
 	// SE
 	uint32_t hitSe_ = 0u;
+	uint32_t bombSe_ = 0u;
+	uint32_t yoiSe_ = 0u;
+	uint32_t startSe_ = 0u;
+
+	bool isYoiEnd = false;
+	int yoiCount = 0;
 
 	//パーティクル
 	static const int particleMax = 50;
