@@ -189,6 +189,7 @@ private: // メンバ変数
 	const int normalPoint = 50;
 	const int isshokuPoint = 75;
 	const int sanshokuPoint = 100;
+	std::unique_ptr<Sprite> currentScoreprite_[5];
 
 	bool isDiscrimination = false;
 

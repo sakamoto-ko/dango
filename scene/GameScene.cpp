@@ -118,6 +118,9 @@ void GameScene::Update() {
 								dango->SetIsHit(false);
 								dango->SetIsDead(true);
 								isBakudan = true;
+								currentScoreprite_[0]->SetTextureHandle(numTex_[0]);
+								currentScoreprite_[1]->SetTextureHandle(numTex_[5]);
+								currentScoreprite_[2]->SetTextureHandle(numTex_[0]);
 								for (int i = 0; i < particleMax; i++) {
 									particlePos[i].translation_ = dango->GetPos();
 								}
@@ -149,7 +152,7 @@ void GameScene::Update() {
 					// 衝突判定と応答
 					CheckAllCollisions();
 				}
-				//団子が三個そろったとき
+				// 団子が三個そろったとき
 				else {
 					// 団子の種類の判別とポイント付与
 					DangoDiscrimination();
@@ -235,11 +238,17 @@ void GameScene::Draw() {
 
 	if (dangoNum >= 3) {
 		currentDangoSprite_[discrimination]->Draw();
+		for (int i = 0; i < 3; i++) {
+			currentScoreprite_[i]->Draw();
+		}
 		pointSprite_->Draw();
 	}
 
 	if (isBakudan) {
 		bombSprite_->Draw();
+		for (int i = 0; i < 3; i++) {
+			currentScoreprite_[i]->Draw();
+		}
 		pointSprite_->Draw();
 	}
 
@@ -497,6 +506,18 @@ void GameScene::CreateTexture() {
 	    {1280.0f, 720.0f});
 	nextSprite_->SetSize({1280.0f, 720.0f});
 	nextSprite_->SetPosition({0.0f, 210.0f});
+
+	for (int i = 0; i < 4; i++) {
+		currentScoreprite_[i].reset(Sprite::Create(numTex_[0], {0.0f, 0.0f}));
+		currentScoreprite_[i]->SetTextureRect(
+		    {
+		        0.0f,
+		        0.0f,
+		    },
+		    {256.0f, 256.0f});
+		currentScoreprite_[i]->SetSize({192.0f, 192.0f});
+		currentScoreprite_[i]->SetPosition({400.0f - 96.0f * (float)i, 335.0f});
+	}
 }
 
 void GameScene::CreateDango() {
@@ -589,22 +610,37 @@ void GameScene::DangoDiscrimination() {
 	// 三色だんご
 	if (IsSanshoku(dangoDiscrimination[0], dangoDiscrimination[1], dangoDiscrimination[2])) {
 		discrimination = SANSHOKUDANGO;
+		currentScoreprite_[0]->SetTextureHandle(numTex_[0]);
+		currentScoreprite_[1]->SetTextureHandle(numTex_[0]);
+		currentScoreprite_[2]->SetTextureHandle(numTex_[1]);
 	}
 	// ピンクだんご
 	else if (IsPink(dangoDiscrimination[0], dangoDiscrimination[1], dangoDiscrimination[2])) {
 		discrimination = PINKDANGO;
+		currentScoreprite_[0]->SetTextureHandle(numTex_[5]);
+		currentScoreprite_[1]->SetTextureHandle(numTex_[7]);
+		currentScoreprite_[2]->SetTextureHandle(numTex_[0]);
 	}
 	// 白だんご
 	else if (IsWhite(dangoDiscrimination[0], dangoDiscrimination[1], dangoDiscrimination[2])) {
 		discrimination = SIRODANGO;
+		currentScoreprite_[0]->SetTextureHandle(numTex_[5]);
+		currentScoreprite_[1]->SetTextureHandle(numTex_[7]);
+		currentScoreprite_[2]->SetTextureHandle(numTex_[0]);
 	}
 	// 緑だんご
 	else if (IsGreen(dangoDiscrimination[0], dangoDiscrimination[1], dangoDiscrimination[2])) {
 		discrimination = MIDORIDANGO;
+		currentScoreprite_[0]->SetTextureHandle(numTex_[5]);
+		currentScoreprite_[1]->SetTextureHandle(numTex_[7]);
+		currentScoreprite_[2]->SetTextureHandle(numTex_[0]);
 	}
 	// ノーマルだんご
 	else {
 		discrimination = NORMALDANGO;
+		currentScoreprite_[0]->SetTextureHandle(numTex_[0]);
+		currentScoreprite_[1]->SetTextureHandle(numTex_[5]);
+		currentScoreprite_[2]->SetTextureHandle(numTex_[0]);
 	}
 }
 
@@ -639,7 +675,7 @@ bool GameScene::IsGreen(int dango1, int dango2, int dango3) {
 }
 
 void GameScene::GetPoint() {
-	//爆弾
+	// 爆弾
 	if (isBakudan) {
 		score += bakudanPoint;
 	}
