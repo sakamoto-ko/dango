@@ -59,6 +59,8 @@ public: // メンバ関数
 	void StartSE();
 	void StopSE();
 
+	int GetScore() { return score; }
+
 private:
 	// テクスチャ一斉生成用関数
 	void CreateTexture();
@@ -87,7 +89,10 @@ private:
 	// 緑団子かどうか
 	bool IsGreen(int dango1, int dango2, int dango3);
 
-	//爆発パーティクル
+	//点数の獲得
+	void GetPoint();
+
+	//パーティクル
 	void PlayParticle();
 
 private: // メンバ変数
@@ -173,10 +178,10 @@ private: // メンバ変数
 	const int timeLimitMax = 1800;
 
 	// 団子種類判別用補完変数
-	int dangoDiscrimination[3][20] = {};
+	int dangoDiscrimination[3] = {};
 	int getDangoBar = 0;
 
-	int discrimination[20] = {};
+	uint32_t discrimination = {};
 
 	// スコア
 	int score = 0;
@@ -206,9 +211,9 @@ private: // メンバ変数
 	uint32_t hitSe_ = 0u;
 
 	//パーティクル
-	const int particleMax = 50;
+	static const int particleMax = 50;
 	const float particleRad = 0.3f;
 	std::vector<Model*> particleModels;
-	WorldTransform particlePos[50]{};
-	uint32_t randomTex_[50] = {};
+	WorldTransform particlePos[particleMax]{};
+	uint32_t randomTex_[particleMax] = {};
 };

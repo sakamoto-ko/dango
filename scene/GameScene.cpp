@@ -21,9 +21,6 @@ void GameScene::Initialize() {
 	// ビュープロジェクション初期化
 	viewProjection_.Initialize();
 
-	// 乱数の初期化
-	SetRandom();
-
 	// テクスチャ生成
 	CreateTexture();
 
@@ -64,17 +61,14 @@ void GameScene::Initialize() {
 	// 制限時間
 	timeLimit_ = 0;
 
-	for (int i = 0; i < 20; i++) {
-		for (int j = 0; j < 3; j++) {
-			dangoDiscrimination[j][i] = WHITE;
-		}
+	for (int j = 0; j < 3; j++) {
+		dangoDiscrimination[j] = WHITE;
 	}
 	getDangoBar = 0;
 
 	score = 0;
 	isBakudan = false;
 	bakudanCount = 0;
-	isDiscrimination = false;
 
 	isStart = false;
 
@@ -127,8 +121,6 @@ void GameScene::Update() {
 								for (int i = 0; i < particleMax; i++) {
 									particlePos[i].translation_ = dango->GetPos();
 								}
-								// 爆弾マイナスポイント
-								score += bakudanPoint;
 							}
 							// その他
 							else {
@@ -137,7 +129,7 @@ void GameScene::Update() {
 								player_->SetParentPlayer(dango->GetParent());
 								// くっついている団子の数に応じて下に移動
 								dango->SetWorldPosition(Vector3(player_->GetPosition().x, dangoPos[dangoNum], player_->GetPosition().z));
-								dangoDiscrimination[dangoNum][getDangoBar] = dango->GetDangoColor();
+								dangoDiscrimination[dangoNum] = dango->GetDangoColor();
 								dangoNum++;
 
 								for (int i = 0; i < particleMax; i++) {
@@ -157,7 +149,7 @@ void GameScene::Update() {
 					// 衝突判定と応答
 					CheckAllCollisions();
 				}
-				// 三個くっついたとき
+				//団子が三個そろったとき
 				else {
 					// 団子の種類の判別とポイント付与
 					DangoDiscrimination();
@@ -211,7 +203,7 @@ void GameScene::Draw() {
 			}
 		}
 
-		//団子三個パーティクル
+		// 団子三個パーティクル
 		if (dangoNum >= 3) {
 			for (int i = 0; i < particleMax; i++) {
 				particleModels[0]->Draw(particlePos[i], viewProjection_, randomTex_[i]);
@@ -242,11 +234,13 @@ void GameScene::Draw() {
 	}
 
 	if (dangoNum >= 3) {
-		currentDangoSprite_[discrimination[getDangoBar]]->Draw();
+		currentDangoSprite_[discrimination]->Draw();
+		pointSprite_->Draw();
 	}
 
 	if (isBakudan) {
 		bombSprite_->Draw();
+		pointSprite_->Draw();
 	}
 
 	if (!isStart) {
@@ -257,12 +251,6 @@ void GameScene::Draw() {
 		}
 	}
 
-	// scoreSprite_->Draw();
-	// pointSprite_->Draw();
-	// startSprite_->Draw();
-	// finishSprite_->Draw();
-	// baclSprite_->Draw();
-
 	// スプライト描画後処理
 	Sprite::PostDraw();
 
@@ -270,9 +258,6 @@ void GameScene::Draw() {
 }
 
 void GameScene::Reset() {
-	// 乱数の初期化
-	SetRandom();
-
 	// プレイヤーのリセット
 	player_->Reset();
 
@@ -296,15 +281,15 @@ void GameScene::Reset() {
 	timeLimit_ = 0;
 
 	// 団子種類判別用補完変数
-	dangoDiscrimination[3][20] = {};
+	for (int i = 0; i < 3; i++) {
+		dangoDiscrimination[i] = 0;
+	}
 	getDangoBar = 0;
 
-	discrimination[20] = {};
+	discrimination = {};
 
 	// スコア
 	score = 0;
-
-	isDiscrimination = false;
 
 	isBakudan = false;
 	bakudanCount = 0;
@@ -378,8 +363,8 @@ void GameScene::CreateTexture() {
 	        0.0f,
 	    },
 	    {1280.0f, 720.0f});
-	pointSprite_->SetSize({1280.0f, 720.0f});
-	pointSprite_->SetPosition({0.0f, 0.0f});
+	pointSprite_->SetSize({960.0f, 540.0f});
+	pointSprite_->SetPosition({300.0f, 300.0f});
 
 	normalTex_ = TextureManager::Load("UI/normal.png");
 	currentDangoSprite_[0].reset(Sprite::Create(normalTex_, {0.0f, 0.0f}));
@@ -467,7 +452,7 @@ void GameScene::CreateTexture() {
 	    },
 	    {1280.0f, 720.0f});
 	bombSprite_->SetSize({1280.0f, 720.0f});
-	bombSprite_->SetPosition({0.0f, 0.0f});
+	bombSprite_->SetPosition({100.0f, 0.0f});
 
 	backGroundTex_ = TextureManager::Load("UI/gamescene.png");
 	backGroundSprite_.reset(Sprite::Create(backGroundTex_, {0.0f, 0.0f}));
@@ -561,10 +546,11 @@ void GameScene::DeleteDango() {
 				};
 				return false;
 			});
+			GetPoint();
+
 			dangoNum = 0;
 			dangoCooldown = 0;
 			getDangoBar++;
-			isDiscrimination = false;
 		}
 	}
 
@@ -592,6 +578,7 @@ void GameScene::DeleteDango() {
 		// 爆弾パーティクル
 		PlayParticle();
 		if (bakudanCount >= 60) {
+			GetPoint();
 			isBakudan = false;
 			bakudanCount = 0;
 		}
@@ -600,45 +587,30 @@ void GameScene::DeleteDango() {
 
 void GameScene::DangoDiscrimination() {
 	// 三色だんご
-	if (IsSanshoku(dangoDiscrimination[0][getDangoBar], dangoDiscrimination[1][getDangoBar], dangoDiscrimination[2][getDangoBar])) {
-		discrimination[getDangoBar] = SANSHOKUDANGO;
-		score += sanshokuPoint;
+	if (IsSanshoku(dangoDiscrimination[0], dangoDiscrimination[1], dangoDiscrimination[2])) {
+		discrimination = SANSHOKUDANGO;
 	}
 	// ピンクだんご
-	else if (IsPink(dangoDiscrimination[0][getDangoBar], dangoDiscrimination[1][getDangoBar], dangoDiscrimination[2][getDangoBar])) {
-		discrimination[getDangoBar] = PINKDANGO;
-		score += isshokuPoint;
+	else if (IsPink(dangoDiscrimination[0], dangoDiscrimination[1], dangoDiscrimination[2])) {
+		discrimination = PINKDANGO;
 	}
 	// 白だんご
-	else if (IsWhite(dangoDiscrimination[0][getDangoBar], dangoDiscrimination[1][getDangoBar], dangoDiscrimination[2][getDangoBar])) {
-		discrimination[getDangoBar] = SIRODANGO;
-		score += isshokuPoint;
+	else if (IsWhite(dangoDiscrimination[0], dangoDiscrimination[1], dangoDiscrimination[2])) {
+		discrimination = SIRODANGO;
 	}
 	// 緑だんご
-	else if (IsGreen(dangoDiscrimination[0][getDangoBar], dangoDiscrimination[1][getDangoBar], dangoDiscrimination[2][getDangoBar])) {
-		discrimination[getDangoBar] = MIDORIDANGO;
-		score += isshokuPoint;
+	else if (IsGreen(dangoDiscrimination[0], dangoDiscrimination[1], dangoDiscrimination[2])) {
+		discrimination = MIDORIDANGO;
 	}
 	// ノーマルだんご
 	else {
-		discrimination[getDangoBar] = NORMALDANGO;
-		score += normalPoint;
+		discrimination = NORMALDANGO;
 	}
-	isDiscrimination = true;
 }
 
 bool GameScene::IsSanshoku(int dango1, int dango2, int dango3) {
-	if (dango1 == GREEN && dango2 == WHITE && dango3 == PINK) {
-		return true;
-	} else if (dango1 == GREEN && dango2 == PINK && dango3 == WHITE) {
-		return true;
-	} else if (dango1 == PINK && dango2 == GREEN && dango3 == WHITE) {
-		return true;
-	} else if (dango1 == PINK && dango2 == WHITE && dango3 == GREEN) {
-		return true;
-	} else if (dango1 == WHITE && dango2 == PINK && dango3 == GREEN) {
-		return true;
-	} else if (dango1 == WHITE && dango2 == GREEN && dango3 == PINK) {
+	if (dango1 == GREEN && dango2 == WHITE && dango3 == PINK || dango1 == GREEN && dango2 == PINK && dango3 == WHITE || dango1 == PINK && dango2 == GREEN && dango3 == WHITE ||
+	    dango1 == PINK && dango2 == WHITE && dango3 == GREEN || dango1 == WHITE && dango2 == PINK && dango3 == GREEN || dango1 == WHITE && dango2 == GREEN && dango3 == PINK) {
 		return true;
 	} else {
 		return false;
@@ -666,10 +638,37 @@ bool GameScene::IsGreen(int dango1, int dango2, int dango3) {
 	return false;
 }
 
+void GameScene::GetPoint() {
+	//爆弾
+	if (isBakudan) {
+		score += bakudanPoint;
+	}
+	// 三色だんご
+	else if (IsSanshoku(dangoDiscrimination[0], dangoDiscrimination[1], dangoDiscrimination[2])) {
+		score += sanshokuPoint;
+	}
+	// ピンクだんご
+	else if (IsPink(dangoDiscrimination[0], dangoDiscrimination[1], dangoDiscrimination[2])) {
+		score += isshokuPoint;
+	}
+	// 白だんご
+	else if (IsWhite(dangoDiscrimination[0], dangoDiscrimination[1], dangoDiscrimination[2])) {
+		score += isshokuPoint;
+	}
+	// 緑だんご
+	else if (IsGreen(dangoDiscrimination[0], dangoDiscrimination[1], dangoDiscrimination[2])) {
+		score += isshokuPoint;
+	}
+	// ノーマルだんご
+	else {
+		score += normalPoint;
+	}
+}
+
 void GameScene::PlayParticle() {
 	// パーティクルの上限まで表示
 	for (int i = 0; i < particleMax; i++) {
-		//パーティクルの色をランダムでかえる処理
+		// パーティクルの色をランダムでかえる処理
 		if (dangoNum >= 3) {
 			int r = rand() % 3 + 1;
 

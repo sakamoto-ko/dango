@@ -5,6 +5,14 @@ void ScoreScene::Initialize() {
 	input_ = Input::GetInstance();
 	audio_ = Audio::GetInstance();
 
+	cubeModel_.reset(Model::CreateFromOBJ("box", true));
+	particleModels = {cubeModel_.get()};
+	for (int i = 0; i < particleMax; i++) {
+		particlePos[i].Initialize();
+		particlePos[i].translation_.z = 40.0f;
+		particlePos[i].scale_ = {0.2f, 0.2f, 0.2f};
+	}
+
 	backGroundTex_ = TextureManager::Load("UI/result.png");
 	backGroundSprite_.reset(Sprite::Create(backGroundTex_, {0.0f, 0.0f}));
 	backGroundSprite_->SetTextureRect(
@@ -38,7 +46,7 @@ void ScoreScene::Initialize() {
 	backSprite_->SetSize({960.0f, 540.0f});
 	backSprite_->SetPosition({150.0f, 300.0f});
 
-	/*numTex_[0] = TextureManager::Load("UI/number/0.png");
+	numTex_[0] = TextureManager::Load("UI/number/0.png");
 	numTex_[1] = TextureManager::Load("UI/number/1.png");
 	numTex_[2] = TextureManager::Load("UI/number/2.png");
 	numTex_[3] = TextureManager::Load("UI/number/3.png");
@@ -48,17 +56,6 @@ void ScoreScene::Initialize() {
 	numTex_[7] = TextureManager::Load("UI/number/7.png");
 	numTex_[8] = TextureManager::Load("UI/number/8.png");
 	numTex_[9] = TextureManager::Load("UI/number/9.png");
-	for (int i = 0; i < 10; i++) {
-		numSprite_[i].reset(Sprite::Create(numTex_[i], {0.0f, 0.0f}));
-		numSprite_[i]->SetTextureRect(
-		    {
-		        0.0f,
-		        0.0f,
-		    },
-		    {256.0f, 256.0f});
-		numSprite_[i]->SetSize({64.0f, 64.0f});
-		numSprite_[i]->SetPosition({0.0f, 0.0f});
-	}*/
 
 	count = 0;
 	isSpace = false;
@@ -71,6 +68,8 @@ void ScoreScene::Update() {
 	if (++count >= 20) {
 		isSpace = true;
 	}
+
+	// PlayParticle();
 }
 
 void ScoreScene::Draw() {
@@ -93,6 +92,10 @@ void ScoreScene::Draw() {
 	// 3Dオブジェクト描画前処理
 	Model::PreDraw(commandList);
 
+	/*for (int i = 0; i < particleMax; i++) {
+	    particleModels[0]->Draw(particlePos[i], viewProjection_, randomTex_[i]);
+	}*/
+
 	// 3Dオブジェクト描画後処理
 	Model::PostDraw();
 #pragma endregion
@@ -104,6 +107,10 @@ void ScoreScene::Draw() {
 	scoreSprite_->Draw();
 
 	backSprite_->Draw();
+
+	for (int i = 0; i < 4; i++) {
+		numSprite_[i]->Draw();
+	}
 
 	// スプライト描画後処理
 	Sprite::PostDraw();
@@ -122,3 +129,30 @@ void ScoreScene::Reset() {
 void ScoreScene::StopAudio() { audio_->StopWave(audioHandle_); }
 
 void ScoreScene::StartAudio() { audioHandle_ = audio_->PlayWave(BGM_, true, 1); }
+
+void ScoreScene::PlayParticle() {
+	for (int i = 0; i < particleMax; i++) {
+		particlePos[i].translation_.y += 1.0f;
+		particlePos[i].UpdateMatrix();
+	}
+}
+
+void ScoreScene::ScoreCalc(int score) {
+	int tmpNum = score;
+	int i = 0;
+
+	while (i < 5) {
+		int dight = tmpNum % 10;
+		numSprite_[i].reset(Sprite::Create(numTex_[dight], {0.0f, 0.0f}));
+		numSprite_[i]->SetTextureRect(
+		    {
+		        0.0f,
+		        0.0f,
+		    },
+		    {256.0f, 256.0f});
+		numSprite_[i]->SetSize({256.0f, 256.0f});
+		numSprite_[i]->SetPosition({720.0f - (float)i * 128.0f, 220.0f});
+		i++;
+		tmpNum /= 10;
+	}
+}

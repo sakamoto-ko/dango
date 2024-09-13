@@ -1,9 +1,13 @@
 #include "SceneManager.h"
+#include "Rand.h"
 
 void SceneManager::AllInitialize(DirectXCommon* dxCommon) {
 	dxCommon_ = dxCommon;
 	audio_ = Audio::GetInstance();
 	input_ = Input::GetInstance();
+
+	// 乱数の初期化
+	SetRandom();
 
 	titleScene->Initialize();
 	gameScene->Initialize();
@@ -49,6 +53,7 @@ void SceneManager::GameUpdate(Input* input) {
 		if (input->TriggerKey(DIK_SPACE)) {
 			StartSE();
 			scene = SCORE;
+			scoreScene->ScoreCalc(gameScene->GetScore());
 			gameScene->SetIsEnd(false);
 			titleScene->Reset();
 			gameScene->StopAudio();
@@ -59,6 +64,7 @@ void SceneManager::GameUpdate(Input* input) {
 			if (joyState.Gamepad.wButtons & XINPUT_GAMEPAD_A) {
 				StartSE();
 				scene = SCORE;
+				scoreScene->ScoreCalc(gameScene->GetScore());
 				gameScene->SetIsEnd(false);
 				titleScene->Reset();
 				gameScene->StopAudio();
